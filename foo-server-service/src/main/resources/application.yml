@@ -1,0 +1,82 @@
+#-----------------------------------------------------------------------------------------------
+# PROFILE LOCAL
+#-----------------------------------------------------------------------------------------------
+spring.profiles: local
+spring.main.allow-bean-definition-overriding: true # Enable bean override
+
+# INFO
+info:
+  service_name: ${spring.application.name}
+  maven_version: ${project.version}
+  git.dirty: ${git.dirty}
+  git.branch: ${git.branch}
+  git.tags: ${git.tags}
+  git.build.time: ${git.build.time}
+  git.build.version: ${git.build.version}
+  git.closest.tag.name: ${git.closest.tag.name}
+  git.commit.time: ${git.commit.time}
+  git.commit.id: ${git.commit.id}
+  git.commit.id.abbrev: ${git.commit.id.abbrev}
+  git.commit.user.name: ${git.commit.user.name}
+  git.commit.user.email: ${git.commit.user.email}
+  git.remote.origin.url: ${git.remote.origin.url}
+
+# ----------------------------------------
+# ACTUATOR PROPERTIES
+# ----------------------------------------
+# ENDPOINTS WEB CONFIGURATION
+management.endpoints.web.exposure.include: '*' # Endpoint IDs that should be included or '*' for all.
+management.endpoints.web.exposure.exclude:  # Endpoint IDs that should be excluded or '*' for all.
+management.endpoints.web.base-path: /management # Base path for Web endpoints. Relative to server.servlet.context-path or management.server.servlet.context-path if management.server.port is configured.
+management.endpoints.web.path-mapping.health: healthcheck
+
+# HEALTH ENDPOINT
+management.endpoint.health.cache.time-to-live: 0ms # Maximum time that a response can be cached.
+management.endpoint.health.enabled: true # Whether to enable the health endpoint.
+management.endpoint.health.roles:  # Roles used to determine whether or not a user is authorized to be shown details. When empty, all authenticated users are authorized.
+management.endpoint.health.show-details: always # When to show full health details.
+
+# INFO CONTRIBUTORS (InfoContributorProperties)
+management.info.build.enabled: true # Whether to enable build info.
+management.info.defaults.enabled: true # Whether to enable default info contributors.
+management.info.env.enabled: true # Whether to enable environment info.
+management.info.git.enabled: true # Whether to enable git info.
+management.info.git.mode: full # Mode to use to expose git information.
+
+# LOGGING
+logging.config: classpath:log4j2-local.xml # Location of the logging configuration file. For instance, `classpath:logback.xml` for Logback.
+logging.file.name: log4j2-local.xml # Log file name (for instance, `myapp.log`). Names can be an exact location or relative to the current directory.
+logging.level: # Log levels severity mapping. For instance, `logging.level.org.springframework: DEBUG`.
+  org.springframework: INFO
+  com.sample: DEBUG
+  com.zaxxer.hikari.HikariConfig: DEBUG
+  org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  io.swagger.models.*: ERROR
+
+# SWAGGER
+springdoc:
+  api-docs:
+    groups:
+      enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    display-request-duration: true
+    groups-order: DESC
+  version: '@springdoc.version@'
+
+# SPRING CLOUD
+spring.cloud:
+  loadbalancer.ribbon:
+    enabled: false
+
+# MONGODB
+spring:
+  data:
+    mongodb:
+      host: ${MONGO_HOST:localhost}
+      port: 27017
+      database: foodb
+      username: root
+      password: root
+      authentication-database: admin
+#spring.data.mongodb.uri: mongodb://root:root@127.0.0.1:27017/foodb?authSource=admin

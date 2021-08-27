@@ -1,0 +1,161 @@
+version: '3.1'
+
+services:
+  consul:
+    image: consul:latest
+    container_name: consul
+    hostname: consul
+    environment:
+      - "CONSUL_LOCAL_CONFIG={\"disable_update_check\": true}"
+      - "CONSUL_BIND_INTERFACE=eth0"
+    networks:
+      spring-webflux-sample:
+    ports:
+      - "8301:8301"
+      - "8400:8400"
+      - "8500:8500"
+      - "8600:8600"
+      - "8600:8600/udp"
+    command: "agent -server -bootstrap -ui -client=0.0.0.0 -bind='{{ GetInterfaceIP \"eth0\" }}'"
+  #--------------------------------------------------------------------
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    hostname: mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    ports:
+      - 27017:27017
+    networks:
+      - spring-webflux-sample
+    volumes:
+      - type: volume
+        source: mongo-data
+        target: /data/db
+      - type: volume
+        source: mongo-config
+        target: /data/configdb
+    #--------------------------------------------------------------------
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express
+    hostname: mongo-express
+    restart: always
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: root
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_MONGODB_PORT: 27017
+    ports:
+      - 8081:8081
+    networks:
+      - spring-webflux-sample
+    depends_on:
+      - mongo
+    links:
+      - mongo
+  #--------------------------------------------------------------------
+  foo-client-service:
+    build: ./foo-client-service
+    container_name: foo-client-service
+    hostname: foo-client-service
+    environment:
+      - SERVER_PORT=8080
+      - SPRING_PROFILES_ACTIVE=local
+      - SPRING_CLOUD_CONSUL_HOST=consul
+      - SPRING_CLOUD_CONSUL_PORT=8500
+      - SPRING_CLOUD_CONSUL_ENABLED=true
+      - SPRING_CLOUD_CONSUL_DISCOVERY_REGISTER=true
+      - SPRING_CLOUD_CONSUL_DISCOVERY_REGISTERHEALTHCHECK=true
+      - SPRING_CLOUD_CONSUL_DISCOVERY_HEALTHCHECKINTERVAL=15s
+      - SPRING_CLOUD_CONSUL_DISCOVERY_TAGS=tag1,tag2
+      - SPRING_CLOUD_CONSUL_DISCOVERY_HOSTNAME=foo-client-service
+      - SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS=true
+      - SPRING_CLOUD_CONSUL_DISCOVERY_IPADDRESS=172.28.1.1
+      - SPRING_CLOUD_CONFIG_ENABLED=false
+      - SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED=false
+      - SPRING_CLOUD_CONFIG_DISCOVERY_SERVICEID=config-server
+    networks:
+      spring-webflux-sample:
+        ipv4_address: 172.28.1.1
+    ports:
+      - "8080:8080"
+    links:
+      - consul
+  #--------------------------------------------------------------------
+  foo-server-service-1:
+    build: ./foo-server-service
+    container_name: foo-server-service-1
+    hostname: foo-server-service-1
+    environment:
+      - SERVER_PORT=9080
+      - SPRING_PROFILES_ACTIVE=local
+      - SPRING_CLOUD_CONSUL_HOST=consul
+      - SPRING_CLOUD_CONSUL_PORT=8500
+      - SPRING_CLOUD_CONSUL_ENABLED=true
+      - SPRING_CLOUD_CONSUL_DISCOVERY_REGISTER=true
+      - SPRING_CLOUD_CONSUL_DISCOVERY_REGISTERHEALTHCHECK=true
+      - SPRING_CLOUD_CONSUL_DISCOVERY_HEALTHCHECKINTERVAL=15s
+      - SPRING_CLOUD_CONSUL_DISCOVERY_TAGS=tag1,tag2
+      - SPRING_CLOUD_CONSUL_DISCOVERY_HOSTNAME=foo-server-service-1
+      - SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS=true
+      - SPRING_CLOUD_CONSUL_DISCOVERY_IPADDRESS=172.28.1.2
+      - SPRING_CLOUD_CONFIG_ENABLED=false
+      - SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED=false
+      - SPRING_CLOUD_CONFIG_DISCOVERY_SERVICEID=config-server
+      - MONGO_HOST=mongo
+    networks:
+      spring-webflux-sample:
+        ipv4_address: 172.28.1.2
+    ports:
+      - "9080:9080"
+    links:
+      - mongo
+      - consul
+  #--------------------------------------------------------------------
+  foo-server-service-2:
+    build: ./foo-server-service
+    container_name: foo-server-service-2
+    hostname: foo-server-service-2
+    environment:
+      - SERVER_PORT=1080
+      - SPRING_PROFILES_ACTIVE=local
+      - SPRING_CLOUD_CONSUL_HOST=consul
+      - SPRING_CLOUD_CONSUL_PORT=8500
+      - SPRING_CLOUD_CONSUL_ENABLED=true
+      - SPRING_CLOUD_CONSUL_DISCOVERY_REGISTER=true
+      - SPRING_CLOUD_CONSUL_DISCOVERY_REGISTERHEALTHCHECK=true
+      - SPRING_CLOUD_CONSUL_DISCOVERY_HEALTHCHECKINTERVAL=15s
+      - SPRING_CLOUD_CONSUL_DISCOVERY_TAGS=tag1,tag2
+      - SPRING_CLOUD_CONSUL_DISCOVERY_HOSTNAME=foo-server-service-2
+      - SPRING_CLOUD_CONSUL_DISCOVERY_PREFER_IP_ADDRESS=true
+      - SPRING_CLOUD_CONSUL_DISCOVERY_IPADDRESS=172.28.1.3
+      - SPRING_CLOUD_CONFIG_ENABLED=false
+      - SPRING_CLOUD_CONFIG_DISCOVERY_ENABLED=false
+      - SPRING_CLOUD_CONFIG_DISCOVERY_SERVICEID=config-server
+      - POSTGRES_HOST=mongo
+    networks:
+      spring-webflux-sample:
+        ipv4_address: 172.28.1.3
+    ports:
+      - "1080:1080"
+    links:
+      - mongo
+      - consul
+#--------------------------------------------------------------------
+networks:
+  spring-webflux-sample:
+    name: spring-webflux-sample
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.28.0.0/16
+volumes:
+  mongo-data:
+    name: mongo-data
+  mongo-config:
+    name: mongo-config
+

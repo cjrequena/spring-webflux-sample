@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.cjrequena.sample</groupId>
+    <artifactId>spring-webflux-sample</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0-SNAPSHOT</version>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.3.11.RELEASE</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    <modules>
+        <module>foo-client-service</module>
+        <module>foo-server-service</module>
+    </modules>
+    <!-- -->
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <java.version>11</java.version>
+        <maven.version>3.5</maven.version>
+        <!-- -->
+        <jaspe.version>1.0.0</jaspe.version>
+        <!-- https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-dependencies -->
+        <spring-cloud-dependencies.version>Hoxton.SR11</spring-cloud-dependencies.version>
+        <!-- https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui -->
+        <springdoc.version>1.5.10</springdoc.version>
+        <!--https://mvnrepository.com/artifact/org.mapstruct/mapstruct-jdk8-->
+        <mapstruct.version>1.4.2.Final</mapstruct.version>
+        <!--https://mvnrepository.com/artifact/com.jcabi/jcabi-manifests-->
+        <jcabi-manifests.version>1.1</jcabi-manifests.version>
+        <!--https://mvnrepository.com/artifact/org.scala-lang/scala-library-->
+        <scala-library.version>2.12.8</scala-library.version>
+        <!--https://mvnrepository.com/artifact/org.scala-lang/scala-xml-->
+        <scala-xml.version>2.11.0-M4</scala-xml.version>
+        <!--https://mvnrepository.com/artifact/com.googlecode.cqengine/cqengine-->
+        <cqengine.version>3.2.0</cqengine.version>
+        <!--https://mvnrepository.com/artifact/cz.jirutka.rsql/rsql-parser-->
+        <rsql-parser.version>2.1.0</rsql-parser.version>
+        <!--https://mvnrepository.com/artifact/org.projectlombok/lombok-->
+        <lombok.version>1.18.20</lombok.version>
+        <!--https://mvnrepository.com/artifact/org.projectlombok/lombok-mapstruct-binding-->
+        <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
+        <!---->
+        <buildnumber-maven-plugin.version>1.4</buildnumber-maven-plugin.version>
+    </properties>
+    <!-- -->
+    <dependencyManagement>
+        <dependencies>
+            <!-- Spring Cloud -->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud-dependencies.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+</project>

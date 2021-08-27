@@ -1,0 +1,13 @@
+
+,------.  ,-----.   ,-----.     ,-----. ,--.    ,--. ,------. ,--.  ,--. ,--------.    ,---.   ,------. ,------.  ,--.   ,--. ,--.  ,-----. ,------.
+|  .---' '  .-.  ' '  .-.  '   '  .--./ |  |    |  | |  .---' |  ,'.|  | '--.  .--'   '   .-'  |  .---' |  .--. '  \  `.'  /  |  | '  .--./ |  .---'
+|  `--,  |  | |  | |  | |  |   |  |     |  |    |  | |  `--,  |  |' '  |    |  |      `.  `-.  |  `--,  |  '--'.'   \     /   |  | |  |     |  `--,
+|  |`    '  '-'  ' '  '-'  '   '  '--'\ |  '--. |  | |  `---. |  | `   |    |  |      .-'    | |  `---. |  |\  \     \   /    |  | '  '--'\ |  `---.
+`--'      `-----'   `-----'     `-----' `-----' `--' `------' `--'  `--'    `--'      `-----'  `------' `--' '--'     `-'     `--'  `-----' `------'
+
+
+${Ansi.RED} :: Spring Boot${Ansi.GREEN}${spring-boot.formatted-version} :: ${Ansi.DEFAULT}
+${Ansi.RED} :: Spring Cloud${Ansi.GREEN} ${spring-cloud-dependencies.version} :: ${Ansi.DEFAULT}
+${Ansi.RED} :: Application Name ${Ansi.GREEN} ${spring.application.name} :: ${Ansi.DEFAULT}
+${Ansi.RED} :: Application Version ${Ansi.GREEN} ${project.version} :: ${Ansi.DEFAULT}
+${Ansi.RED} :: Java Version ${Ansi.GREEN} ${java.version} :: ${Ansi.DEFAULT}

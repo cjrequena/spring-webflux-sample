@@ -1,0 +1,148 @@
+#-----------------------------------------------------------------------------------------------
+# DEFAULT
+#-----------------------------------------------------------------------------------------------
+spring.main.allow-bean-definition-overriding: true
+
+# INFO
+info:
+  service_name: ${spring.application.name}
+  maven_version: ${project.version}
+  git.dirty: ${git.dirty}
+  git.branch: ${git.branch}
+  git.tags: ${git.tags}
+  git.build.time: ${git.build.time}
+  git.build.version: ${git.build.version}
+  git.closest.tag.name: ${git.closest.tag.name}
+  git.commit.time: ${git.commit.time}
+  git.commit.id: ${git.commit.id}
+  git.commit.id.abbrev: ${git.commit.id.abbrev}
+  git.commit.user.name: ${git.commit.user.name}
+  git.commit.user.email: ${git.commit.user.email}
+  git.remote.origin.url: ${git.remote.origin.url}
+
+---
+#-----------------------------------------------------------------------------------------------
+# PROFILE LOCAL
+#-----------------------------------------------------------------------------------------------
+spring:
+  profiles: local
+
+# ----------------------------------------
+# ACTUATOR PROPERTIES
+# ----------------------------------------
+# ENDPOINTS WEB CONFIGURATION
+management.endpoints.web.exposure.include: '*' # Endpoint IDs that should be included or '*' for all.
+management.endpoints.web.exposure.exclude:  # Endpoint IDs that should be excluded or '*' for all.
+management.endpoints.web.base-path: /management # Base path for Web endpoints. Relative to server.servlet.context-path or management.server.servlet.context-path if management.server.port is configured.
+management.endpoints.web.path-mapping.health: healthcheck
+
+# HEALTH ENDPOINT
+management.endpoint.health.cache.time-to-live: 0ms # Maximum time that a response can be cached.
+management.endpoint.health.enabled: true # Whether to enable the health endpoint.
+management.endpoint.health.roles:  # Roles used to determine whether or not a user is authorized to be shown details. When empty, all authenticated users are authorized.
+management.endpoint.health.show-details: always # When to show full health details.
+
+management.health.circuitbreakers.enabled: true
+management.health.ratelimiters.enabled: true
+
+# INFO CONTRIBUTORS (InfoContributorProperties)
+management.info.build.enabled: true # Whether to enable build info.
+management.info.defaults.enabled: true # Whether to enable default info contributors.
+management.info.env.enabled: true # Whether to enable environment info.
+management.info.git.enabled: true # Whether to enable git info.
+management.info.git.mode: full # Mode to use to expose git information.
+
+# LOGGING
+logging.config: classpath:log4j2-local.xml # Location of the logging configuration file. For instance, `classpath:logback.xml` for Logback.
+logging.file.name: log4j2-local.xml # Log file name (for instance, `myapp.log`). Names can be an exact location or relative to the current directory.
+logging.level: # Log levels severity mapping. For instance, `logging.level.org.springframework: DEBUG`.
+  org.springframework: INFO
+  com.sample: DEBUG
+  com.zaxxer.hikari.HikariConfig: DEBUG
+  org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  io.swagger.models.*: ERROR
+
+# SPRING CLOUD
+spring.cloud.loadbalancer.ribbon.enabled: false
+
+spring.cloud.circuitbreaker.resilience4j.enabled: true
+# resilience4j circuit breaker configuration [https://resilience4j.readme.io/docs/circuitbreaker]
+resilience4j.circuitbreaker:
+  configs:
+    default:
+      registerHealthIndicator: true
+      failureRateThreshold: 50
+      slowCallRateThreshold: 100
+      slowCallDurationThreshold: 60000ms
+      permittedNumberOfCallsInHalfOpenState: 10
+      maxWaitDurationInHalfOpenState: 0
+      slidingWindowType: "COUNT_BASED"
+      slidingWindowSize: 100
+      minimumNumberOfCalls: 100
+      waitDurationInOpenState: 6000ms
+      automaticTransitionFromOpenToHalfOpenEnabled: false
+      max-wait-duration-in-half-open-state: 1ms
+      recordExceptions:
+      ignoreExceptions:
+    test:
+      failureRateThreshold: 99
+  instances:
+    foo-service:
+      baseConfig: test
+# resilience4j retry configuration [https://resilience4j.readme.io/docs/retry]
+resilience4j.retry:
+  configs:
+    default:
+      maxRetryAttempts: 3
+      waitDuration: 100
+      retryExceptions:
+        - org.springframework.web.client.HttpServerErrorException
+        - java.util.concurrent.TimeoutException
+        - java.io.IOException
+  instances:
+    foo-service:
+      baseConfig: default
+# resilience4j bulkhead configuration
+resilience4j.bulkhead:
+  instances:
+    foo-service:
+      maxWaitDuration: 10ms
+      maxConcurrentCalls: 10
+# resilience4j thread-pool-bulkhead configuration [https://resilience4j.readme.io/docs/bulkhead]
+resilience4j.thread-pool-bulkhead:
+  configs:
+    default:
+      maxThreadPoolSize: 4
+      coreThreadPoolSize: 2
+      queueCapacity: 2
+  instances:
+    foo-service:
+      baseConfig: default
+# resilience4j ratelimiter configuration [https://resilience4j.readme.io/docs/ratelimiter]
+resilience4j.ratelimiter:
+  configs:
+    default:
+      registerHealthIndicator: true
+      limitForPeriod: 10
+      limitRefreshPeriod: 1s
+      timeoutDuration: 0
+      eventConsumerBufferSize: 100
+  instances:
+    foo-service:
+      baseConfig: default
+# resilience4j timelimiter configuration [https://resilience4j.readme.io/docs/timeout]
+resilience4j.timelimiter:
+  instances:
+    foo-service:
+      timeoutDuration: 2s
+      cancelRunningFuture: true
+
+#------------------------------
+# Client configuration
+#------------------------------
+services:
+  foo-server-service:
+    #url: http://foo-server-service
+    url: "http:://localhost:9080"
+    read-timeout: 30000
+    connection-timeout: 30000
