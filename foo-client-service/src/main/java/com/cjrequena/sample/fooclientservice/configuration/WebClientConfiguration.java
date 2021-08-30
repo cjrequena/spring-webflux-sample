@@ -6,6 +6,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
@@ -26,15 +27,23 @@ public class WebClientConfiguration {
 
   @Value("${services.foo-server-service.url}")
   private String fooServerServiceUrl;
-  @Value("${services.foo-server-service.read-timeout}")
-  private int fooServerServiceReadTimeout;
-  @Value("${services.foo-server-service.connection-timeout}")
-  private int fooServerServiceConnectionTimeout;
+  @Value("${services.foo-server-service.lbUrl}")
+  private String lbFooServerServiceUrl;
 
   @Bean
-  //@LoadBalanced
-  public WebClient.Builder loadBalancedWebClientBuilder() {
-    ClientHttpConnector connector = getClientHttpConnector(fooServerServiceConnectionTimeout, fooServerServiceReadTimeout);
+  public WebClient.Builder webClientBuilder() {
+    ClientHttpConnector connector = getClientHttpConnector();
+    final ExchangeStrategies exchangeStrategies = getExchangeStrategies();
+    return WebClient
+      .builder()
+      .clientConnector(connector)
+      .exchangeStrategies(exchangeStrategies);
+  }
+
+  @Bean("lbWebClientBuilder")
+  @LoadBalanced
+  public WebClient.Builder lbWebClientBuilder() {
+    ClientHttpConnector connector = getClientHttpConnector();
     final ExchangeStrategies exchangeStrategies = getExchangeStrategies();
     return WebClient
       .builder()
@@ -43,9 +52,8 @@ public class WebClientConfiguration {
   }
 
   @Bean("fooServerWebClient")
-  //@LoadBalanced
   public WebClient fooServerWebClient() {
-    final ClientHttpConnector connector = getClientHttpConnector(fooServerServiceConnectionTimeout, fooServerServiceReadTimeout);
+    final ClientHttpConnector connector = getClientHttpConnector();
     final ExchangeStrategies exchangeStrategies = getExchangeStrategies();
     return WebClient
       .builder()
@@ -55,12 +63,25 @@ public class WebClientConfiguration {
       .build();
   }
 
-  private ClientHttpConnector getClientHttpConnector(int connectionTimeout, int readTimeout) {
+  @Bean("lbFooServerWebClient")
+  @LoadBalanced
+  public WebClient lbFooServerWebClient() {
+    final ClientHttpConnector connector = getClientHttpConnector();
+    final ExchangeStrategies exchangeStrategies = getExchangeStrategies();
+    return WebClient
+      .builder()
+      .baseUrl(lbFooServerServiceUrl)
+      .clientConnector(connector)
+      .exchangeStrategies(exchangeStrategies)
+      .build();
+  }
+
+  private ClientHttpConnector getClientHttpConnector() {
     HttpClient httpClient = HttpClient.create()
-      .tcpConfiguration(client -> client.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, connectionTimeout)
+      .tcpConfiguration(client -> client.option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 10000)
         .doOnConnected(connection -> connection
-          .addHandlerLast(new ReadTimeoutHandler(readTimeout, TimeUnit.MILLISECONDS))
-          .addHandlerLast(new WriteTimeoutHandler(10))))
+          .addHandlerLast(new ReadTimeoutHandler(10000, TimeUnit.MILLISECONDS))
+          .addHandlerLast(new WriteTimeoutHandler(10000, TimeUnit.MILLISECONDS))))
       .doOnRequest((request, connection) -> connection.addHandlerFirst(new CustomNettyLogger(HttpClient.class)));
     return new ReactorClientHttpConnector(httpClient);
   }
@@ -70,10 +91,10 @@ public class WebClientConfiguration {
       .codecs(clientDefaultCodecsConfigurer -> {
         clientDefaultCodecsConfigurer
           .defaultCodecs()
-          .jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper, MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM, MediaType.APPLICATION_STREAM_JSON));
+          .jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper, MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM, MediaType.APPLICATION_NDJSON));
         clientDefaultCodecsConfigurer
           .defaultCodecs()
-          .jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper, MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM, MediaType.APPLICATION_STREAM_JSON));
+          .jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper, MediaType.APPLICATION_JSON, MediaType.TEXT_EVENT_STREAM, MediaType.APPLICATION_NDJSON));
       }).build();
   }
 }

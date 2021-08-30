@@ -2,7 +2,6 @@ package com.cjrequena.sample.fooclientservice.ws.controller;
 
 import com.cjrequena.sample.fooclientservice.common.Constant;
 import com.cjrequena.sample.fooclientservice.dto.FooDTOV1;
-import com.cjrequena.sample.fooclientservice.exception.web.BadRequestWebException;
 import com.cjrequena.sample.fooclientservice.exception.web.ConflictWebException;
 import com.cjrequena.sample.fooclientservice.service.FooServiceV1;
 import io.swagger.v3.oas.annotations.Operation;
@@ -18,16 +17,19 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
+import java.net.URI;
 
-import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_NDJSON_VALUE;
 
 /**
  * <p>
@@ -43,7 +45,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 @RestController
 @RequestMapping(value = "/foo-client-service")
 public class FooControllerV1 {
-
+  private static final String FOO_SERVICE = "foo-service";
   public static final String CACHE_CONTROL = "Cache-Control";
   public static final String ACCEPT_VERSION_VALUE = "Accept-Version=vnd.foo-service.v1";
   public static final String APPLICATION_JSON_PATCH_VALUE = "application/json-patch+json";
@@ -55,6 +57,10 @@ public class FooControllerV1 {
   @Autowired
   @Qualifier("fooServerWebClient")
   private WebClient fooServerWebClient;
+
+  @Autowired
+  @Qualifier("lbFooServerWebClient")
+  private WebClient lbFooServerWebClient;
 
   @Operation(
     summary = "Create a new foo.",
@@ -71,7 +77,7 @@ public class FooControllerV1 {
         )
       )
     },
-    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = FooDTOV1.class)))
+    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = MediaType.APPLICATION_NDJSON_VALUE, schema = @Schema(implementation = FooDTOV1.class)))
   )
   @ApiResponses(
     value = {
@@ -88,26 +94,19 @@ public class FooControllerV1 {
   )
   @PostMapping(
     path = "/fooes",
-    produces = {APPLICATION_JSON_VALUE}
+    produces = {APPLICATION_NDJSON_VALUE}
   )
-  public Mono<ResponseEntity> create(
-    @Valid @RequestBody FooDTOV1 dto) throws ConflictWebException, BadRequestWebException {
-    try {
-          return fooServerWebClient
-            .post()
-            .uri("/foo-server-service/fooes/")
-            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_STREAM_JSON_VALUE)
-            .header("Accept-Version", "vnd.foo-service.v1")
-            .body(Mono.just(dto), FooDTOV1.class)
-            .retrieve()
-            .bodyToMono(ResponseEntity.class)
-            .onErrorMap(ex -> new InterruptedException(ex.getMessage()))
-            .doOnNext(log::info);
-      //return fooServiceV1.create(dto);
-    } catch (Exception ex) {
-      log.error(ex);
-      throw new BadRequestWebException(ex.getMessage());
-    }
+  public Mono<ResponseEntity> create(@Valid @RequestBody FooDTOV1 dto, ServerHttpRequest request, UriComponentsBuilder ucBuilder) {
+    return fooServiceV1.create(dto).flatMap(response -> {
+      HttpHeaders headers = response.headers().asHttpHeaders();
+      switch (response.statusCode()) {
+        case CONFLICT:
+          return Mono.error(new ConflictWebException());
+        default:
+          final URI location = ucBuilder.path(new StringBuilder().append(request.getPath()).append("/{id}").toString()).buildAndExpand(headers.get("id")).toUri();
+          return Mono.just(ResponseEntity.created(location).build());
+      }
+    });
   }
 
   //  @Operation(

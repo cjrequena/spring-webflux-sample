@@ -38,6 +38,7 @@ import javax.validation.Valid;
 import java.net.URI;
 
 import static com.cjrequena.sample.fooserverservice.common.Constant.VND_FOO_SERVICE_V1;
+import static org.springframework.http.MediaType.APPLICATION_NDJSON_VALUE;
 import static org.springframework.http.MediaType.APPLICATION_STREAM_JSON_VALUE;
 
 /**
@@ -75,7 +76,7 @@ public class FooResourceV1 {
         )
       )
     },
-    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = MediaType.APPLICATION_STREAM_JSON_VALUE, schema = @Schema(implementation = FooDTOV1.class)))
+    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = MediaType.APPLICATION_NDJSON_VALUE, schema = @Schema(implementation = FooDTOV1.class)))
   )
   @ApiResponses(
     value = {
@@ -92,7 +93,7 @@ public class FooResourceV1 {
   )
   @PostMapping(
     path = "/fooes",
-    produces = {APPLICATION_STREAM_JSON_VALUE}
+    produces = {APPLICATION_NDJSON_VALUE}
   )
   public Mono<ResponseEntity<Void>> create(@Valid @RequestBody FooDTOV1 dto, ServerHttpRequest request, UriComponentsBuilder ucBuilder)
     throws ConflictWebException, BadRequestWebException {
@@ -100,10 +101,11 @@ public class FooResourceV1 {
       if (dto.getId() != null) {
         throw new BadRequestWebException("A new Foo cannot already have an ID " + FooDTOV1.class.getName() + " idexists");
       }
-      HttpHeaders headers = new HttpHeaders();
-      headers.set(CACHE_CONTROL, "no store, private, max-age=0");
       return fooServiceV1.create(fooDtoEntityMapperV1.toEntity(dto))
         .map(entity -> {
+          HttpHeaders headers = new HttpHeaders();
+          headers.set(CACHE_CONTROL, "no store, private, max-age=0");
+          headers.set("id", entity.getId());
           final URI location = ucBuilder.path(new StringBuilder().append(request.getPath()).append("/{id}").toString()).buildAndExpand(entity.getId()).toUri();
           return ResponseEntity.created(location).headers(headers).build();
         });

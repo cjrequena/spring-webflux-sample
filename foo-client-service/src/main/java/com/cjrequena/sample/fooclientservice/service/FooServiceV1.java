@@ -1,6 +1,7 @@
 package com.cjrequena.sample.fooclientservice.service;
 
 import com.cjrequena.sample.fooclientservice.dto.FooDTOV1;
+import com.cjrequena.sample.fooclientservice.exception.service.ServiceException;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import io.github.resilience4j.retry.annotation.Retry;
@@ -10,11 +11,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+
+import static org.springframework.http.MediaType.APPLICATION_NDJSON_VALUE;
 
 /**
  * <p>
@@ -35,49 +37,34 @@ public class FooServiceV1 {
   private CircuitBreakerFactory circuitBreakerFactory;
   private WebClient.Builder webClientBuilder;
   private WebClient fooServerWebClient;
+  private WebClient lbFooServerWebClient;
 
   @Autowired
-  public FooServiceV1(WebClient.Builder webClientBuilder, CircuitBreakerFactory circuitBreakerFactory, @Qualifier("fooServerWebClient") WebClient fooServerWebClient) {
+  public FooServiceV1(WebClient.Builder webClientBuilder, CircuitBreakerFactory circuitBreakerFactory, @Qualifier("fooServerWebClient") WebClient fooServerWebClient,
+    @Qualifier("lbFooServerWebClient") WebClient lbFooServerWebClient) {
     this.webClientBuilder = webClientBuilder;
     this.circuitBreakerFactory = circuitBreakerFactory;
     this.fooServerWebClient = fooServerWebClient;
+    this.lbFooServerWebClient = lbFooServerWebClient;
   }
 
   //@TimeLimiter(name = FOO_SERVICE)
-  //@CircuitBreaker(name = FOO_SERVICE, fallbackMethod = "createFallbackMethod")
+  @CircuitBreaker(name = FOO_SERVICE, fallbackMethod = "createFallbackMethod")
   @Bulkhead(name = FOO_SERVICE)
   @Retry(name = FOO_SERVICE)
-  public Mono<ResponseEntity> create(FooDTOV1 dto) throws Exception {
-    log.debug("{}", dto);
-    //    return fooServerWebClient
-    //      .post()
-    //      .uri("/foo-server-service/fooes/")
-    //      .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_STREAM_JSON_VALUE)
-    //      .header("Accept-Version", "vnd.foo-service.v1")
-    //      .body(Mono.just(dto), FooDTOV1.class)
-    //      .retrieve()
-    //      .bodyToMono(ResponseEntity.class)
-    //      .onErrorMap(ex -> new InterruptedException(ex.getMessage()))
-    //      .doOnNext(log::info);
-
-    final WebClient webClient = webClientBuilder.baseUrl("http:://localhost:9080").build();
-    return webClient
+  public Mono<ClientResponse> create(FooDTOV1 dto) {
+    return lbFooServerWebClient
       .post()
       .uri("/foo-server-service/fooes/")
-      .header("accept-version", "vnd.foo-service.v1")
-      .bodyValue(dto)
-      .retrieve()
-      .bodyToMono(ResponseEntity.class)
-      .onErrorMap(ex -> {
-       log.error(ex);
-       return new RuntimeException(ex);
-      })
-      .doOnNext(log::info);
+      .header(HttpHeaders.CONTENT_TYPE, APPLICATION_NDJSON_VALUE)
+      .header("Accept-Version", "vnd.foo-service.v1")
+      .body(Mono.just(dto), FooDTOV1.class)
+      .exchangeToMono(response -> Mono.just(response.mutate().build()));
   }
 
-  public ResponseEntity<Void> createFallbackMethod(FooDTOV1 dto, Throwable ex) throws Throwable {
+  public Mono<ClientResponse> createFallbackMethod(FooDTOV1 dto, Throwable ex) throws Throwable {
     log.debug("createFallbackMethod", ex);
-    throw ex;
+    throw new ServiceException(ex);
   }
 
   //  //@TimeLimiter(name = FOO_SERVICE)

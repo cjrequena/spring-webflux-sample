@@ -1,9 +1,3 @@
-#-----------------------------------------------------------------------------------------------
-# PROFILE LOCAL
-#-----------------------------------------------------------------------------------------------
-spring.profiles: local
-spring.main.allow-bean-definition-overriding: true # Enable bean override
-
 # INFO
 info:
   service_name: ${spring.application.name}
@@ -20,6 +14,13 @@ info:
   git.commit.user.name: ${git.commit.user.name}
   git.commit.user.email: ${git.commit.user.email}
   git.remote.origin.url: ${git.remote.origin.url}
+
+spring.main.allow-bean-definition-overriding: true # Enable bean override
+
+#-----------------------------------------------------------------------------------------------
+# PROFILE LOCAL
+#-----------------------------------------------------------------------------------------------
+spring.config.activate.on-profile: local
 
 # ----------------------------------------
 # ACTUATOR PROPERTIES

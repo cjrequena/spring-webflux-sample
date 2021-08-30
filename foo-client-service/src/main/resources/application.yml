@@ -1,8 +1,3 @@
-#-----------------------------------------------------------------------------------------------
-# DEFAULT
-#-----------------------------------------------------------------------------------------------
-spring.main.allow-bean-definition-overriding: true
-
 # INFO
 info:
   service_name: ${spring.application.name}
@@ -20,12 +15,12 @@ info:
   git.commit.user.email: ${git.commit.user.email}
   git.remote.origin.url: ${git.remote.origin.url}
 
----
+spring.main.allow-bean-definition-overriding: true # Enable bean override
+
 #-----------------------------------------------------------------------------------------------
 # PROFILE LOCAL
 #-----------------------------------------------------------------------------------------------
-spring:
-  profiles: local
+spring.config.activate.on-profile: local
 
 # ----------------------------------------
 # ACTUATOR PROPERTIES
@@ -142,7 +137,9 @@ resilience4j.timelimiter:
 #------------------------------
 services:
   foo-server-service:
-    #url: http://foo-server-service
-    url: "http:://localhost:9080"
-    read-timeout: 30000
-    connection-timeout: 30000
+    #lbUrl: http://foo-server-service
+    lbUrl: http://localhost:9080
+    url: http://localhost:9080
+    read-timeout: 10000
+    connection-timeout: 10000
+spring.cloud.discovery.client.simple.instances.foo-server-service[0].uri: http://localhost:9080
