@@ -154,7 +154,6 @@
         <dependency>
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-spring-boot2</artifactId>
-            <version>1.7.0</version> <!-- TODO -->
             <exclusions>
                 <exclusion>
                     <groupId>io.github.reslience4j</groupId>
@@ -165,12 +164,10 @@
         <dependency>
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-all</artifactId>
-            <version>1.7.0</version> <!-- TODO -->
         </dependency>
         <dependency>
             <groupId>io.github.resilience4j</groupId>
             <artifactId>resilience4j-reactor</artifactId>
-            <version>1.7.0</version> <!-- TODO -->
         </dependency>
         <!--cache-->
         <dependency>
