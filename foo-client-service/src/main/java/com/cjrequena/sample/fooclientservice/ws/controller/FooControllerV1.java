@@ -99,12 +99,14 @@ public class FooControllerV1 {
   public Mono<ResponseEntity> create(@Valid @RequestBody FooDTOV1 dto, ServerHttpRequest request, UriComponentsBuilder ucBuilder) {
     return fooServiceV1.create(dto).flatMap(response -> {
       HttpHeaders headers = response.headers().asHttpHeaders();
+      final URI location = ucBuilder.path(new StringBuilder().append(request.getPath()).append("/{id}").toString()).buildAndExpand(headers.get("id")).toUri();
       switch (response.statusCode()) {
+        case CREATED:
+          return Mono.just(ResponseEntity.created(location).build());
         case CONFLICT:
           return Mono.error(new ConflictWebException());
         default:
-          final URI location = ucBuilder.path(new StringBuilder().append(request.getPath()).append("/{id}").toString()).buildAndExpand(headers.get("id")).toUri();
-          return Mono.just(ResponseEntity.created(location).build());
+          return Mono.error(new RuntimeException());
       }
     });
   }
