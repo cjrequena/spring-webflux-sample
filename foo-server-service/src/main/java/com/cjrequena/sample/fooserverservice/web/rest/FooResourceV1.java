@@ -39,7 +39,7 @@ import java.net.URI;
 
 import static com.cjrequena.sample.fooserverservice.common.Constant.VND_FOO_SERVICE_V1;
 import static org.springframework.http.MediaType.APPLICATION_NDJSON_VALUE;
-import static org.springframework.http.MediaType.APPLICATION_STREAM_JSON_VALUE;
+import static org.springframework.http.MediaType.APPLICATION_NDJSON_VALUE;
 
 /**
  * <p>
@@ -144,7 +144,7 @@ public class FooResourceV1 {
   )
   @GetMapping(
     path = "/fooes/{id}",
-    produces = {APPLICATION_STREAM_JSON_VALUE}
+    produces = {APPLICATION_NDJSON_VALUE}
   )
   public Mono<ResponseEntity<FooDTOV1>> retrieveById(@PathVariable(value = "id") String id) {
     HttpHeaders headers = new HttpHeaders();
@@ -190,7 +190,7 @@ public class FooResourceV1 {
   )
   @GetMapping(
     path = "/fooes",
-    produces = {APPLICATION_STREAM_JSON_VALUE}
+    produces = {APPLICATION_NDJSON_VALUE}
   )
   public Mono<ResponseEntity<Flux<FooDTOV1>>> retrieve() {
     //    final List<FooDTOV1> fooDTOV1s = this.fooServiceV1.retrieve().map(entity -> fooDtoEntityMapperV1.toDTO(entity)).collectList().block();
@@ -236,7 +236,7 @@ public class FooResourceV1 {
   )
   @PutMapping(
     path = "/fooes/{id}",
-    produces = {APPLICATION_STREAM_JSON_VALUE}
+    produces = {APPLICATION_NDJSON_VALUE}
   )
   public Mono<ResponseEntity<Object>> update(@PathVariable(value = "id") String id, @Valid @RequestBody FooDTOV1 dto, BindingResult bindingResult) {
     dto.setId(id);
@@ -282,7 +282,7 @@ public class FooResourceV1 {
   )
   @DeleteMapping(
     path = "/fooes/{id}",
-    produces = {APPLICATION_STREAM_JSON_VALUE}
+    produces = {APPLICATION_NDJSON_VALUE}
   )
   public Mono<ResponseEntity<Void>> delete(@PathVariable(value = "id") String id) throws NotFoundWebException {
     try {
