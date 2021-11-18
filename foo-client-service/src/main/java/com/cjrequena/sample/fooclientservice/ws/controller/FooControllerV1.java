@@ -21,22 +21,20 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
 
 import static org.springframework.http.MediaType.APPLICATION_NDJSON_VALUE;
-import static org.springframework.util.MimeTypeUtils.APPLICATION_JSON_VALUE;
 
 /**
  * <p>
@@ -103,7 +101,7 @@ public class FooControllerV1 {
     path = "/fooes",
     produces = {APPLICATION_NDJSON_VALUE}
   )
-  public Mono<ResponseEntity<FooDTOV1>> create(@Valid @RequestBody FooDTOV1 dto, ServerHttpRequest request, UriComponentsBuilder ucBuilder) {
+  public Mono<ResponseEntity<Void>> create(@Valid @RequestBody FooDTOV1 dto) {
     return fooServiceV1.create(dto)
       .onErrorMap(ex -> {
         if (ex instanceof WebClientConflictServiceException) {
@@ -143,7 +141,7 @@ public class FooControllerV1 {
   )
   @GetMapping(
     path = "/fooes/{id}",
-    produces = {APPLICATION_JSON_VALUE}
+    produces = {APPLICATION_NDJSON_VALUE}
   )
   public Mono<ResponseEntity<FooDTOV1>> retrieveById(@PathVariable(value = "id") String id) {
     return this.fooServiceV1.retrieveById(id)
@@ -185,7 +183,7 @@ public class FooControllerV1 {
   )
   @GetMapping(
     path = "/fooes",
-    produces = {APPLICATION_JSON_VALUE}
+    produces = {APPLICATION_NDJSON_VALUE}
   )
   public Mono<ResponseEntity<Flux<FooDTOV1>>> retrieve() {
     return this.fooServiceV1.retrieve()
@@ -198,55 +196,51 @@ public class FooControllerV1 {
       });
   }
 
-  //  @Operation(
-  //    summary = "Update a foo by id.",
-  //    description = "Update a foo by id.",
-  //    parameters = {
-  //      @Parameter(
-  //        name = "accept-version",
-  //        required = true, in = ParameterIn.HEADER,
-  //        schema = @Schema(
-  //          name = "accept-version",
-  //          type = "string",
-  //          allowableValues = {Constant.VND_FOO_SERVICE_V1}
-  //        )
-  //      )
-  //    },
-  //    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = FooDTOV1.class)))
-  //  )
-  //  @ApiResponses(
-  //    value = {
-  //      @ApiResponse(responseCode = "200", description = "OK - The request was successful, we updated the resource and the response body contains the representation."),
-  //      @ApiResponse(responseCode = "204", description = "No Content - The request was successful, we created a new resource and the response body does not contains the representation."),
-  //      @ApiResponse(responseCode = "400", description = "Bad Request - The data given in the PUT failed validation. Inspect the response body for details."),
-  //      @ApiResponse(responseCode = "401", description = "Unauthorized - The supplied credentials, if any, are not sufficient to access the resource."),
-  //      @ApiResponse(responseCode = "408", description = "Request Timeout"),
-  //      @ApiResponse(responseCode = "409", description = "Conflict - The request could not be processed because of conflict in the request"),
-  //      @ApiResponse(responseCode = "429", description = "Too Many Requests - Your application is sending too many simultaneous requests."),
-  //      @ApiResponse(responseCode = "500", description = "Internal Server Error - We couldn't create the resource. Please try again."),
-  //      @ApiResponse(responseCode = "503", description = "Service Unavailable - We are temporarily unable. Please wait for a bit and try again. ")
-  //    }
-  //  )
-  //  @PutMapping(
-  //    path = "/fooes/{id}",
-  //    produces = {APPLICATION_JSON_VALUE}
-  //  )
-  //  public ResponseEntity<Void> update(
-  //    @PathVariable(value = "id") Long id,
-  //    @Valid @RequestBody FooDTOV1 dto,
-  //    BindingResult bindingResult) throws NotFoundWebException {
-  //    //--
-  //    try {
-  //      this.fooServiceV1.update(id, dto);
-  //      //Headers
-  //      HttpHeaders responseHeaders = new HttpHeaders();
-  //      responseHeaders.set(CACHE_CONTROL, "no store, private, max-age=0");
-  //      return new ResponseEntity<>(responseHeaders, HttpStatus.NO_CONTENT);
-  //    } catch (WebClientNotFoundServiceException ex) {
-  //      throw new NotFoundWebException(ex.getMessage());
-  //    }
-  //    //---
-  //  }
+  @Operation(
+    summary = "Update a foo by id.",
+    description = "Update a foo by id.",
+    parameters = {
+      @Parameter(
+        name = "accept-version",
+        required = true, in = ParameterIn.HEADER,
+        schema = @Schema(
+          name = "accept-version",
+          type = "string",
+          allowableValues = {Constant.VND_FOO_SERVICE_V1}
+        )
+      )
+    },
+    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(required = true, content = @Content(mediaType = MediaType.APPLICATION_NDJSON_VALUE, schema = @Schema(implementation = FooDTOV1.class)))
+  )
+  @ApiResponses(
+    value = {
+      @ApiResponse(responseCode = "200", description = "OK - The request was successful, we updated the resource and the response body contains the representation."),
+      @ApiResponse(responseCode = "204", description = "No Content - The request was successful, we created a new resource and the response body does not contains the representation."),
+      @ApiResponse(responseCode = "400", description = "Bad Request - The data given in the PUT failed validation. Inspect the response body for details."),
+      @ApiResponse(responseCode = "401", description = "Unauthorized - The supplied credentials, if any, are not sufficient to access the resource."),
+      @ApiResponse(responseCode = "408", description = "Request Timeout"),
+      @ApiResponse(responseCode = "409", description = "Conflict - The request could not be processed because of conflict in the request"),
+      @ApiResponse(responseCode = "429", description = "Too Many Requests - Your application is sending too many simultaneous requests."),
+      @ApiResponse(responseCode = "500", description = "Internal Server Error - We couldn't create the resource. Please try again."),
+      @ApiResponse(responseCode = "503", description = "Service Unavailable - We are temporarily unable. Please wait for a bit and try again. ")
+    }
+  )
+  @PutMapping(
+    path = "/fooes/{id}",
+    produces = {APPLICATION_NDJSON_VALUE}
+  )
+  public Mono<ResponseEntity<Void>> update(@PathVariable(value = "id") String id, @Valid @RequestBody FooDTOV1 dto)  {
+    return this.fooServiceV1.update(id, dto)
+      .onErrorMap(ex -> {
+        if (ex instanceof WebClientBadRequestServiceException) {
+          return new BadRequestWebException();
+        } else if (ex instanceof WebClientNotFoundServiceException) {
+          return new NotFoundWebException();
+        } else {
+          return ex;
+        }
+      });
+  }
 
   //  @Operation(
   //    summary = "Patch a foo by id.",
@@ -281,7 +275,7 @@ public class FooControllerV1 {
   //  )
   //  @PatchMapping(
   //    path = "/fooes/{id}",
-  //    produces = {APPLICATION_JSON_VALUE},
+  //    produces = {APPLICATION_NDJSON_VALUE},
   //    consumes = {APPLICATION_JSON_PATCH_VALUE}
   //  )
   //  public ResponseEntity<Void> patch(
@@ -322,7 +316,7 @@ public class FooControllerV1 {
   //  )
   //  @PatchMapping(
   //    path = "/fooes/{id}",
-  //    produces = {APPLICATION_JSON_VALUE},
+  //    produces = {APPLICATION_NDJSON_VALUE},
   //    consumes = {APPLICATION_JSON_MERGE_PATCH_VALUE}
   //  )
   //  public ResponseEntity<Void> patch(
@@ -370,7 +364,7 @@ public class FooControllerV1 {
   //  )
   //  @DeleteMapping(
   //    path = "/fooes/{id}",
-  //    produces = {APPLICATION_JSON_VALUE}
+  //    produces = {APPLICATION_NDJSON_VALUE}
   //  )
   //  public ResponseEntity<Void> delete(@PathVariable(value = "id") Long id) throws NotFoundWebException {
   //    //--

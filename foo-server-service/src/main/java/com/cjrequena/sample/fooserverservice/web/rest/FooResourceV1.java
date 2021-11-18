@@ -237,7 +237,7 @@ public class FooResourceV1 {
     path = "/fooes/{id}",
     produces = {APPLICATION_NDJSON_VALUE}
   )
-  public Mono<ResponseEntity<Object>> update(@PathVariable(value = "id") String id, @Valid @RequestBody FooDTOV1 dto, BindingResult bindingResult) {
+  public Mono<ResponseEntity<Object>> update(@PathVariable(value = "id") String id, @Valid @RequestBody FooDTOV1 dto) {
     dto.setId(id);
     HttpHeaders headers = new HttpHeaders();
     headers.set(CACHE_CONTROL, "no store, private, max-age=0");
