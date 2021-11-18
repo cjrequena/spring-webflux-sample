@@ -1,6 +1,7 @@
 package com.cjrequena.sample.fooclientservice.service;
 
 import com.cjrequena.sample.fooclientservice.dto.FooDTOV1;
+import com.cjrequena.sample.fooclientservice.exception.service.WebClientBadRequestServiceException;
 import com.cjrequena.sample.fooclientservice.exception.service.WebClientConflictServiceException;
 import com.cjrequena.sample.fooclientservice.exception.service.WebClientNotFoundServiceException;
 import io.github.resilience4j.bulkhead.annotation.Bulkhead;
@@ -17,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import static org.springframework.http.MediaType.APPLICATION_NDJSON_VALUE;
@@ -95,18 +97,24 @@ public class FooServiceV1 {
       throw ex;
     }
 
-  //  @CircuitBreaker(name = FOO_SERVICE, fallbackMethod = "retrieveFallbackMethod")
-  //  @Bulkhead(name = FOO_SERVICE)
-  //  @Retry(name = FOO_SERVICE)
-  //  public ResponseEntity<List<FooDTOV1>> retrieve(String fields, String filters, String sort, Integer offset, Integer limit) throws WebClientBadRequestServiceException {
-  //    return fooServerServiceV1Feign.retrieve(fields, filters, sort, offset, limit);
-  //  }
+    @CircuitBreaker(name = FOO_SERVICE, fallbackMethod = "retrieveFallbackMethod")
+    @Bulkhead(name = FOO_SERVICE)
+    @Retry(name = FOO_SERVICE)
+    public Mono<ResponseEntity<Flux<FooDTOV1>>> retrieve()  {
+      return lbFooServerWebClient
+        .get()
+        .uri("/foo-server-service/fooes/")
+        .header(HttpHeaders.CONTENT_TYPE, APPLICATION_NDJSON_VALUE)
+        .header("Accept-Version", "vnd.foo-service.v1")
+        .retrieve()
+        .onStatus(httpStatus -> HttpStatus.BAD_REQUEST.equals(httpStatus), clientResponse -> Mono.error(new WebClientBadRequestServiceException()))
+        .toEntityFlux(FooDTOV1.class);
+    }
 
-  //  public ResponseEntity<List<FooDTOV1>> retrieveFallbackMethod(String fields, String filters, String sort, Integer offset, Integer limit, Throwable ex)
-  //    throws WebClientBadRequestServiceException {
-  //    log.debug("retrieveFallbackMethod");
-  //    throw (WebClientBadRequestServiceException) ex;
-  //  }
+    public Mono<ResponseEntity<Flux<FooDTOV1>>> retrieveFallbackMethod(Throwable ex) throws Throwable {
+      log.debug("retrieveFallbackMethod");
+      throw ex;
+    }
 
   //  @CircuitBreaker(name = FOO_SERVICE, fallbackMethod = "updateFallbackMethod")
   //  @Bulkhead(name = FOO_SERVICE)
