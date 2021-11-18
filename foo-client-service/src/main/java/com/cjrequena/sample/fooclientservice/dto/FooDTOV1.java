@@ -39,7 +39,7 @@ public class FooDTOV1 implements DTO {
   @JsonProperty(value = "id")
   @Getter(onMethod = @__({@JsonProperty("id")}))
   @Schema(name = "id", accessMode = Schema.AccessMode.READ_ONLY)
-  private Long id;
+  private String id;
 
   @NotNull(message = "name is a required field")
   @JsonProperty(value = "name", required = true)

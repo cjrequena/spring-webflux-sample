@@ -39,7 +39,6 @@ import java.net.URI;
 
 import static com.cjrequena.sample.fooserverservice.common.Constant.VND_FOO_SERVICE_V1;
 import static org.springframework.http.MediaType.APPLICATION_NDJSON_VALUE;
-import static org.springframework.http.MediaType.APPLICATION_NDJSON_VALUE;
 
 /**
  * <p>

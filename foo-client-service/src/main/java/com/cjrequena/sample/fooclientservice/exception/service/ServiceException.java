@@ -10,7 +10,7 @@ import lombok.ToString;
  * @author cjrequena
  */
 @ToString
-public class ServiceException extends Exception {
+public abstract class ServiceException extends Exception {
 
   /**
    * @param exception - The exception
