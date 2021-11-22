@@ -1,4 +1,4 @@
-package com.cjrequena.sample.fooclientservice.ws.controller;
+package com.cjrequena.sample.fooclientservice.web.rest;
 
 import com.cjrequena.sample.fooclientservice.common.Constant;
 import com.cjrequena.sample.fooclientservice.dto.FooDTOV1;
@@ -50,7 +50,7 @@ import static org.springframework.http.MediaType.APPLICATION_NDJSON_VALUE;
 @Log4j2
 @RestController
 @RequestMapping(value = "/foo-client-service")
-public class FooControllerV1 {
+public class FooResourceV1 {
   private static final String FOO_SERVICE = "foo-service";
   public static final String CACHE_CONTROL = "Cache-Control";
   public static final String ACCEPT_VERSION_VALUE = "Accept-Version=vnd.foo-service.v1";
