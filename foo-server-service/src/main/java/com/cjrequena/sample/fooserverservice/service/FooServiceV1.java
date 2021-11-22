@@ -61,13 +61,10 @@ public class FooServiceV1 {
       .switchIfEmpty(Mono.error(new DBNotFoundServiceException()));
   }
 
-  public Void delete(String id) throws DBNotFoundServiceException {
-    final FooEntityV1 entity = fooRepositoryV1.findById(id).block();
-    if (entity != null && entity.getId() != null) {
-      return fooRepositoryV1.delete(entity).block();
-    } else {
-      throw new DBNotFoundServiceException("Foo not found by id " + id);
-    }
+  public Mono<Void> delete(String id) {
+     return this.fooRepositoryV1.findById(id)
+      .switchIfEmpty(Mono.error(new DBNotFoundServiceException("Foo not found by id: " + id)))
+      .flatMap(entity -> this.fooRepositoryV1.deleteById(entity.getId()));
   }
 }
 

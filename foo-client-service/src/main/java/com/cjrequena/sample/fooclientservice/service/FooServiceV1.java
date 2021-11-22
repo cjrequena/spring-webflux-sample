@@ -139,40 +139,27 @@ public class FooServiceV1 {
     throw ex;
   }
 
-  //  @CircuitBreaker(name = FOO_SERVICE, fallbackMethod = "patchFallbackMethod")
-  //  @Bulkhead(name = FOO_SERVICE)
-  //  @Retry(name = FOO_SERVICE)
-  //  public ResponseEntity<Void> patch(Long id, JsonPatch patchDocument) throws WebClientNotFoundServiceException {
-  //    return fooServerServiceV1Feign.patch(id, patchDocument);
-  //  }
 
-  //  public ResponseEntity<Void> patchFallbackMethod(Long id, JsonPatch patchDocument, Throwable ex) throws WebClientNotFoundServiceException {
-  //    log.debug("patchFallbackMethod");
-  //    throw (WebClientNotFoundServiceException) ex;
-  //  }
+    @CircuitBreaker(name = FOO_SERVICE, fallbackMethod = "deleteFallbackMethod")
+    @Bulkhead(name = FOO_SERVICE)
+    @Retry(name = FOO_SERVICE)
+    public Mono<ResponseEntity<Void>> delete(String id)  {
+      return lbFooServerWebClient
+        .delete()
+        .uri("/foo-server-service/fooes/" + id)
+        .header(HttpHeaders.CONTENT_TYPE, APPLICATION_NDJSON_VALUE)
+        .header("Accept-Version", "vnd.foo-service.v1")
+        //.exchangeToMono(response -> Mono.just(response.mutate().build()));
+        .retrieve()
+        .onStatus(HttpStatus.NOT_FOUND::equals, clientResponse -> Mono.error(new WebClientNotFoundServiceException()))
+        .onStatus(HttpStatus.CONFLICT::equals, clientResponse -> Mono.error(new WebClientConflictServiceException()))
+        .toEntity(Void.class)
+        .doOnNext(log::info);
+    }
 
-  //  @CircuitBreaker(name = FOO_SERVICE, fallbackMethod = "mergeFallbackMethod")
-  //  @Bulkhead(name = FOO_SERVICE)
-  //  @Retry(name = FOO_SERVICE)
-  //  public ResponseEntity<Void> merge(Long id, JsonMergePatch mergePatchDocument) throws WebClientNotFoundServiceException {
-  //    return fooServerServiceV1Feign.patch(id, mergePatchDocument);
-  //  }
-
-  //  public ResponseEntity<Void> mergeFallbackMethod(Long id, JsonMergePatch mergePatchDocument, Throwable ex) throws WebClientNotFoundServiceException {
-  //    log.debug("mergeFallbackMethod");
-  //    throw (WebClientNotFoundServiceException) ex;
-  //  }
-
-  //  @CircuitBreaker(name = FOO_SERVICE, fallbackMethod = "deleteFallbackMethod")
-  //  @Bulkhead(name = FOO_SERVICE)
-  //  @Retry(name = FOO_SERVICE)
-  //  public ResponseEntity<Void> delete(Long id) throws WebClientNotFoundServiceException {
-  //    return fooServerServiceV1Feign.delete(id);
-  //  }
-
-  //  public ResponseEntity<Void> deleteFallbackMethod(Long id, Throwable ex) throws WebClientNotFoundServiceException {
-  //    log.debug("deleteFallbackMethod");
-  //    throw (WebClientNotFoundServiceException) ex;
-  //  }
+    public Mono<ResponseEntity<Void>> deleteFallbackMethod(String id, Throwable ex) throws Throwable {
+      log.debug("deleteFallbackMethod");
+      throw ex;
+    }
 
 }

@@ -21,7 +21,6 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.reactive.ServerHttpRequest;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -283,14 +282,19 @@ public class FooResourceV1 {
     path = "/fooes/{id}",
     produces = {APPLICATION_NDJSON_VALUE}
   )
-  public Mono<ResponseEntity<Void>> delete(@PathVariable(value = "id") String id) throws NotFoundWebException {
-    try {
-      this.fooServiceV1.delete(id);
-      HttpHeaders headers = new HttpHeaders();
-      headers.set(CACHE_CONTROL, "no store, private, max-age=0");
-      return Mono.just(ResponseEntity.noContent().headers(headers).build());
-    } catch (DBNotFoundServiceException e) {
-      throw new NotFoundWebException();
-    }
+  public Mono<ResponseEntity<Object>> delete(@PathVariable(value = "id") String id) {
+    HttpHeaders headers = new HttpHeaders();
+    headers.set(CACHE_CONTROL, "no store, private, max-age=0");
+    return this.fooServiceV1.delete(id)
+      .map(entity -> ResponseEntity.noContent().headers(headers).build())
+      .onErrorMap(ex -> {
+        if (ex instanceof DBNotFoundServiceException) {
+          return new NotFoundWebException();
+        } else if (ex instanceof DBConflictServiceException) {
+          return new BadRequestWebException();
+        } else {
+          return ex;
+        }
+      });
   }
 }
